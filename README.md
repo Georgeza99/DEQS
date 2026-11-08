@@ -1,8 +1,15 @@
 # DEQS
 
-An Arabic, RTL web application foundation for a neighborhood grocery store in Jordan.
-Phase 1 contains only a responsive welcome page. No financial operations, mock records,
-authentication, database, or persistence are implemented.
+An Arabic, RTL application interface for a neighborhood grocery store in Jordan.
+Phase 2 includes a responsive dashboard, reusable application shell, and placeholder
+pages for customers, archive, reports, and settings. No financial operations, mock
+records, authentication, database, or persistence are implemented.
+
+Financial summaries explicitly show unavailable data. The total debt card displays
+“لا توجد بيانات بعد” and omits its eye button until real data is available.
+Future real amounts, including zero, start masked; the eye button changes only their
+display. Navigation, refresh, history restoration, and tab hiding reset the mask.
+Visibility is never persisted. The current application supplies no financial values.
 
 ## Requirements
 
@@ -45,9 +52,19 @@ src/
     globals.css     Global styling and Tailwind CSS
     icon.svg        Application icon
     layout.tsx      Arabic metadata, language, and RTL document
-    page.tsx        Welcome page (server component)
+    page.tsx        Dashboard (server component)
+    customers/      Customers placeholder route
+    archive/        Archive placeholder route
+    reports/        Reports placeholder route
+    settings/       Settings placeholder route
   components/
-    brand-mark.tsx  Reusable decorative brand mark
+    app-shell.tsx         Shared header, sidebar, and modal mobile navigation
+    brand-mark.tsx        Existing decorative brand mark
+    debt-summary.tsx      Display-only privacy control and amount states
+    empty-state.tsx       Reusable empty state
+    icon.tsx              Consistent inline SVG icons
+    placeholder-page.tsx  Shared layout for future feature pages
+    section-intro.tsx     Page introduction
 ```
 
 Routes and layouts belong in `src/app`; shared UI belongs in `src/components`.
@@ -61,4 +78,35 @@ See [the quality report](docs/phase-1.1-qa.md) for the actual checks, six-viewpo
 Chrome verification, accessibility fixes, and remaining test limitations.
 ESLint 9.39.5 is compatible with the installed Next.js lint plugins but is end-of-life;
 the report explains why forcing ESLint 10 would introduce peer conflicts.
+
+## Phase 2 verification
+
+See [the Phase 2 report](docs/phase-2-qa.md) for route verification, six-viewport
+production Chrome checks, privacy and drawer interactions, and remaining limitations.
+The mobile drawer uses a native modal dialog to make background content inert,
+locks background scrolling, wraps keyboard focus, and supports Escape, backdrop,
+close-button, and navigation dismissal. Desktop navigation can be collapsed.
+Only the application shell and debt privacy control require client components.
+
+## Phase 2.1 privacy tests
+
+```powershell
+npm.cmd run test:privacy
+```
+
+The focused tests use Node's built-in test runner, installed Chrome (or Edge), and
+an isolated local Next.js fixture. No extra dependencies or browser downloads are
+needed. Set `CHROME_PATH` if your Chromium executable is elsewhere. All generated
+fixtures, browser profiles, logs, and screenshots stay under Git-ignored `.qa/`.
+The test runner starts and stops its own fixture server and browser; financial
+fixture values never enter the actual application routes.
+
+The debt component accepts an explicit `DebtData` union. Available values use a
+canonical decimal string with exactly three fractional digits (including `0.000`).
+Formatting inserts grouping separators without floating-point conversion or
+financial arithmetic. Unavailable data uses `{ status: "unavailable" }`.
+
+See [the Phase 2.1 report](docs/phase-2.1-qa.md) for exact verification and limits.
+This is visual screen privacy; future server-side access controls remain necessary
+when connecting financial data.
 
