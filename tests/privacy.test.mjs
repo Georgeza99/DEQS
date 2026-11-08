@@ -1,13 +1,14 @@
 import assert from "node:assert/strict";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { test } from "node:test";
 import { browserErrors, connect, newPage, pause, startBrowser } from "./helpers/browser.mjs";
 import { fixtureAmounts, startFixture } from "./helpers/privacy-fixture.mjs";
 
 test("total-debt privacy and application regression", { timeout: 240000 }, async t => {
-  const output = path.resolve(".qa/phase21-tests");
-  await mkdir(output, { recursive: true });
+  const scratch = path.resolve(".qa");
+  await mkdir(scratch, { recursive: true });
+  const output = await mkdtemp(path.join(scratch, "phase21-tests-"));
   const fixture = await startFixture(output);
   t.after(() => fixture.child.kill());
   const browser = await startBrowser(output);
@@ -26,6 +27,18 @@ test("total-debt privacy and application regression", { timeout: 240000 }, async
     }).observe(document, {subtree:true, childList:true, characterData:true});
   ` });
   const hidden = () => page.evaluate(`document.querySelector('#total-debt-display').textContent.includes('المبلغ مخفي') && !/[0-9]/.test(document.querySelector('#total-debt-display').textContent)`);
+  async function waitForPage(expression, description) {
+    for (let attempt = 0; attempt < 50; attempt++) {
+      if (await page.evaluate(expression)) return;
+      await pause(100);
+    }
+    assert.fail(description);
+  }
+  const waitForCustomers = () => waitForPage("location.pathname === '/customers'", "Customers navigation did not complete");
+  const waitForDashboard = () => waitForPage(
+    "location.pathname === '/' && document.querySelector('.privacy-toggle') !== null",
+    "Dashboard navigation did not complete",
+  );
   async function reveal() {
     await page.evaluate("window.deliberatelyRevealed = true");
     await page.click(".privacy-toggle");
@@ -71,13 +84,16 @@ test("total-debt privacy and application regression", { timeout: 240000 }, async
 
   await t.test("client navigation, browser back, and forward all reset privacy", async () => {
     await reveal();
-    await page.click('.button-primary'); await pause(300);
-    assert.equal(await page.evaluate("location.pathname"), "/customers");
-    await page.evaluate("history.back()"); await pause(500);
+    await page.click(".button-primary");
+    await waitForCustomers();
+    await page.evaluate("history.back()");
+    await waitForDashboard();
     assert.equal(await hidden(), true);
     await reveal();
-    await page.evaluate("history.forward()"); await pause(450);
-    await page.click('.desktop-sidebar a[href="/"]'); await pause(350);
+    await page.evaluate("history.forward()");
+    await waitForCustomers();
+    await page.click('.desktop-sidebar a[href="/"]');
+    await waitForDashboard();
     assert.equal(await hidden(), true);
   });
 

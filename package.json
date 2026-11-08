@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint . --max-warnings=0",
     "typecheck": "next typegen && tsc --noEmit",
-    "test:privacy": "node --test tests/privacy.test.mjs"
+    "test:privacy": "node --test tests/privacy.test.mjs",
+    "test:db": "node --test tests/database.test.mjs",
+    "test:server-db": "node --test tests/server-db.test.mjs"
   },
   "dependencies": {
     "next": "^16.0.0",

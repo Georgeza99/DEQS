@@ -2,8 +2,9 @@
 
 An Arabic, RTL application interface for a neighborhood grocery store in Jordan.
 Phase 2 includes a responsive dashboard, reusable application shell, and placeholder
-pages for customers, archive, reports, and settings. No financial operations, mock
-records, authentication, database, or persistence are implemented.
+pages for customers, archive, reports, and settings. Milestone A adds PostgreSQL
+migrations and a server-only owner context adapter. The UI still uses the Phase 2.1
+unavailable-data state. See [current progress](docs/DEQS-PROGRESS.md).
 
 Financial summaries explicitly show unavailable data. The total debt card displays
 “لا توجد بيانات بعد” and omits its eye button until real data is available.
@@ -13,7 +14,9 @@ Visibility is never persisted. The current application supplies no financial val
 
 ## Requirements
 
-Node.js 22.13+ (22.x) or 24+ and npm. Use a supported Node.js LTS release for deployment.
+Use Node.js `24.22.1` from [.node-version](.node-version) and npm `11.20.0` for
+repeatable local checks. Verify the active versions with `node --version` and
+`npm.cmd --version`.
 On Windows PowerShell, use `npm.cmd` to avoid the npm.ps1 execution policy restriction.
 
 ## Run locally
@@ -21,14 +24,17 @@ On Windows PowerShell, use `npm.cmd` to avoid the npm.ps1 execution policy restr
 ```powershell
 cd C:\Users\ASUS\OneDrive\Desktop\DEQS
 npm.cmd ci
-npm.cmd run dev
+npm.cmd run dev -- --hostname 127.0.0.1
 ```
 
 Open http://localhost:3000. Stop the server with Ctrl+C.
-If Node.js is installed but missing from the current PowerShell PATH, first run:
+If the workstation's global Node differs from the pin, this checkout was verified
+with the installed Node 24 runtime selected in the current PowerShell session:
 
 ```powershell
-$env:PATH = 'C:\Program Files\nodejs;' + $env:PATH
+$node24 = 'C:\Users\ASUS\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin'
+$env:Path = "$node24;C:\Program Files\nodejs;" + $env:Path
+node --version
 ```
 
 ## Checks and production build
@@ -43,6 +49,31 @@ npm.cmd start
 `typecheck` generates Next.js route types before running TypeScript. `start` requires
 a successful production build. The lockfile pins the resolved dependency versions.
 The project-local npm cache is ignored by Git.
+If Turbopack's CSS worker exits in this Windows workspace, the verified fallback
+is `npm.cmd run build -- --webpack`. See [progress](docs/DEQS-PROGRESS.md) for results.
+
+## Database foundation and local tests
+
+Install the PostgreSQL command-line programs separately for local database testing.
+On Windows the harness defaults to `C:\Program Files\PostgreSQL\18\bin`. Set
+`DEQS_PG_BIN` to an alternate bin directory if needed.
+
+```powershell
+npm.cmd run test:db
+npm.cmd run test:server-db
+npm.cmd run test:privacy
+```
+
+The database suite starts a fresh password-protected loopback cluster under ignored
+`.qa`, applies the three migrations and shuts down that cluster after testing. It
+uses synthetic records and a database-facing shim for Supabase roles and claims.
+The adapter suite mocks HTTP. Actual Supabase Auth and Data API checks require an
+authorized staging project. The welcome dashboard and local database tests require no
+Supabase environment values. [.env.example](.env.example) lists the server settings
+for future staging use.
+
+See the [master brief](docs/DEQS-MASTER-SPEC.md), [implementation plan](docs/DEQS-IMPLEMENTATION-PLAN.md),
+[requirements matrix](docs/DEQS-REQUIREMENTS-MATRIX.md) and [quality gates](docs/DEQS-QUALITY-STANDARDS.md).
 
 ## Structure
 

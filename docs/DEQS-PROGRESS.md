@@ -1,4 +1,50 @@
-# DEQS — progress and end-of-day handover
+# DEQS progress
+
+## 8 November 2026 · Milestone A
+
+| Phase | Evidence |
+| --- | --- |
+| 1 and 1.1 | The Arabic RTL Next.js foundation and welcome page passed the recorded [Phase 1.1 QA](phase-1.1-qa.md). |
+| 2 and 2.1 | The dashboard shell, placeholder routes and debt privacy behavior are preserved at Git checkpoint `74d91bc9f44a57f00ab91fe2f2f8fb96dc7fba2a`. See [Phase 2 QA](phase-2-qa.md) and [Phase 2.1 QA](phase-2.1-qa.md). |
+| 3.0 | The architecture review is recorded in [architecture](architecture/README.md). The [decision record](architecture/decisions.md) resolves conflicts with the master brief. |
+| 3.1 / A | Three versioned migrations define nine tables in private PostgreSQL schemas, force RLS, reserve command and opening identities, and defer validation of posting groups to commit. The server-only owner context adapter is available for later wiring. No owner is seeded and no runtime write routine is granted. |
+
+The dashboard still shows unavailable data. No Supabase project or test owner has been configured. No real customer data was accessed. Final verification started on `main` at `74d91bc9f44a57f00ab91fe2f2f8fb96dc7fba2a`. The local Milestone A checkpoint includes the Phase 3.0 architecture documents and preserves the dependency lockfile.
+
+### Verification
+
+| Check | Result |
+| --- | --- |
+| Master attachment hash | The retained [master specification](DEQS-MASTER-SPEC.md) matches the supplied attachment byte-for-byte. SHA-256 `06EE357B0FE49F4F2D5CBE8A77FF4B0D7206C4BD635178D85105B3449143171A`. Git excludes this file from line-ending conversion. |
+| `npm.cmd run test:db` | Passed on a fresh isolated PostgreSQL 18.6 cluster with 5 subtests and their parent. Verified forced RLS and owner/AAL2 claims, draft and zero opening, uniqueness under concurrent key reservation, exact amounts, deferred rollback, and immutable correction/history rules. The harness shut down the cluster. |
+| `npm.cmd run test:server-db` | 3 passed. Mocked HTTP covers missing or unsafe settings, the read-only owner DTO, denial and sanitized transport failures. |
+| `npm.cmd run lint` and `npm.cmd run typecheck` | Passed with Node 24.22.1. |
+| `npm.cmd run build` and production smoke | The final workspace-root rerun reproduced the Turbopack CSS-worker startup failure on Node 24.22.1. All 21 runtime source and configuration files matched the successful Milestone A clean copy byte-for-byte, including the lockfile. The clean-copy production smoke returned HTTP 200 and Arabic RTL HTML on all five routes. The comparison points to a workspace-specific build issue. The exact cause remains unconfirmed. |
+| `npm.cmd run build -- --webpack` | Passed again in the original workspace on Node 24.22.1 and produced all five application routes. |
+| `npm.cmd run test:privacy` | 17 passed in Edge, including viewport, zero, unavailable, and refresh/navigation/tab reset checks. The first Chrome run stalled in the DevTools refresh/new-tab check. The test now uses a fresh profile and waits for route transitions. |
+
+PostgreSQL verification used synthetic Supabase roles and request claims. The ledger suite uses the disposable cluster's test admin to exercise storage constraints. The application role has no posting privileges. Real JWT verification, Data API schema exposure and grants, session refresh, MFA and hosted transaction behavior remain pending.
+
+### Continue from here
+
+1. Identify an authorized development/staging Supabase project or approve an isolated real Supabase stack. Use synthetic test identities, with self-signup off. Keep production and real data out of the exercise.
+2. In Milestone B, verify the signed Auth JWT and owner binding, MFA challenge and refresh, session and recovery flows, and denial matrix through the actual Data API. See the [implementation plan](DEQS-IMPLEMENTATION-PLAN.md) and [traceability matrix](DEQS-REQUIREMENTS-MATRIX.md).
+3. Track the workspace-root Turbopack failure separately. The verified workspace build fallback is documented in [README](../README.md).
+
+### Start the existing application
+
+```powershell
+Set-Location 'C:\Users\ASUS\OneDrive\Desktop\DEQS'
+node --version
+npm.cmd --version
+npm.cmd run dev -- --hostname 127.0.0.1
+```
+
+Use Node 24.22.1 and npm 11.20.0. With dependencies already installed, the server opens at [http://127.0.0.1:3000](http://127.0.0.1:3000).
+
+---
+
+## Historical handover · 6 November 2026
 
 Last updated: 6 November 2026, Asia/Amman.
 Development is paused. Do not start another phase without the owner's instructions.
