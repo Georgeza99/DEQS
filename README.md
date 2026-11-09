@@ -2,9 +2,10 @@
 
 An Arabic, RTL application interface for a neighborhood grocery store in Jordan.
 Phase 2 includes a responsive dashboard, reusable application shell, and placeholder
-pages for customers, archive, reports, and settings. Milestone A adds PostgreSQL
-migrations and a server-only owner context adapter. The UI still uses the Phase 2.1
-unavailable-data state. See [current progress](docs/DEQS-PROGRESS.md).
+pages for customers, archive, reports, and settings. Milestone A provides the
+PostgreSQL foundation. Milestone B protects the workspace with owner login and
+TOTP MFA. The dashboard still uses the Phase 2.1 unavailable-data state.
+See [current progress](docs/DEQS-PROGRESS.md).
 
 Financial summaries explicitly show unavailable data. The total debt card displays
 “لا توجد بيانات بعد” and omits its eye button until real data is available.
@@ -24,10 +25,13 @@ On Windows PowerShell, use `npm.cmd` to avoid the npm.ps1 execution policy restr
 ```powershell
 cd C:\Users\ASUS\OneDrive\Desktop\DEQS
 npm.cmd ci
-npm.cmd run dev -- --hostname 127.0.0.1
+npm.cmd run dev -- --hostname localhost
 ```
 
-Open http://localhost:3000. Stop the server with Ctrl+C.
+Open [http://localhost:3000/login](http://localhost:3000/login). The app denies
+workspace access until the local configuration and owner session are valid.
+Follow the [DEQS-DEV setup guide](docs/DEQS-AUTH-SETUP.md) for environment values,
+redirects, invitation, MFA, and recovery. Stop the server with Ctrl+C.
 If the workstation's global Node differs from the pin, this checkout was verified
 with the installed Node 24 runtime selected in the current PowerShell session:
 
@@ -62,15 +66,18 @@ On Windows the harness defaults to `C:\Program Files\PostgreSQL\18\bin`. Set
 npm.cmd run test:db
 npm.cmd run test:server-db
 npm.cmd run test:privacy
+npm.cmd run build -- --webpack
+npm.cmd run test:auth
 ```
 
 The database suite starts a fresh password-protected loopback cluster under ignored
-`.qa`, applies the three migrations and shuts down that cluster after testing. It
+`.qa`, applies the versioned migrations and shuts down that cluster after testing. It
 uses synthetic records and a database-facing shim for Supabase roles and claims.
-The adapter suite mocks HTTP. Actual Supabase Auth and Data API checks require an
-authorized staging project. The welcome dashboard and local database tests require no
-Supabase environment values. [.env.example](.env.example) lists the server settings
-for future staging use.
+The adapter suite mocks HTTP. The authentication suite starts the built application
+against a synthetic local Auth and Data API and drives the browser flow. It supplies
+its own environment. The privacy fixture exercises the actual dashboard view
+separately from the route-authorization tests. Hosted checks require authorized
+DEQS-DEV setup. [.env.example](.env.example) lists the server settings.
 
 See the [master brief](docs/DEQS-MASTER-SPEC.md), [implementation plan](docs/DEQS-IMPLEMENTATION-PLAN.md),
 [requirements matrix](docs/DEQS-REQUIREMENTS-MATRIX.md) and [quality gates](docs/DEQS-QUALITY-STANDARDS.md).
@@ -83,19 +90,21 @@ src/
     globals.css     Global styling and Tailwind CSS
     icon.svg        Application icon
     layout.tsx      Arabic metadata, language, and RTL document
-    page.tsx        Dashboard (server component)
-    customers/      Customers placeholder route
-    archive/        Archive placeholder route
-    reports/        Reports placeholder route
-    settings/       Settings placeholder route
+    (auth)/         Arabic login, invitation, MFA, and recovery
+    (owner)/        Protected dashboard, customers, archive, reports, and settings
+    api/owner/      Private session status
   components/
+    auth/                 Authentication forms and session UI
     app-shell.tsx         Shared header, sidebar, and modal mobile navigation
     brand-mark.tsx        Existing decorative brand mark
+    dashboard.tsx        Dashboard view used by the privacy regression fixture
     debt-summary.tsx      Display-only privacy control and amount states
     empty-state.tsx       Reusable empty state
     icon.tsx              Consistent inline SVG icons
     placeholder-page.tsx  Shared layout for future feature pages
     section-intro.tsx     Page introduction
+  server/auth/     Supabase SSR client, authorization, and authentication actions
+  proxy.ts         Request-scoped session refresh and private response headers
 ```
 
 Routes and layouts belong in `src/app`; shared UI belongs in `src/components`.
