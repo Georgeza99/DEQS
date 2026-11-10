@@ -74,7 +74,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div style={{ 
+    <div className="dash-page" style={{ 
       minHeight: '100vh', 
       background: 'radial-gradient(circle at top right, #1a1a1a, #0d0d0d)', 
       color: '#fff', 
@@ -82,11 +82,32 @@ export default function DashboardPage() {
       direction: 'rtl',
       fontFamily: 'system-ui, -apple-system, sans-serif'
     }}>
+      {/* Responsive rules (inline styles can't hold media queries) */}
+      <style>{`
+        .dash-form {
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) 150px;
+        }
+
+        @media (max-width: 640px) {
+          .dash-page { padding: 24px 12px !important; }
+          .dash-title { font-size: 22px !important; }
+          .dash-form {
+            grid-template-columns: 1fr;
+            padding: 16px !important;
+          }
+          .dash-table th,
+          .dash-table td {
+            padding: 10px 12px !important;
+            white-space: nowrap;
+          }
+        }
+      `}</style>
+
       <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
         
         {/* Header Title */}
         <div style={{ marginBottom: '30px', borderBottom: '1px solid #222', paddingBottom: '15px' }}>
-          <h1 style={{ color: '#f7a01c', fontSize: '28px', fontWeight: '800', margin: 0, letterSpacing: '-0.5px' }}>
+          <h1 className="dash-title" style={{ color: '#f7a01c', fontSize: '28px', fontWeight: '800', margin: 0, letterSpacing: '-0.5px' }}>
             ⚡ لوحة التحكم الرئيسية (Dashboard)
           </h1>
           <p style={{ color: '#888', fontSize: '14px', margin: '5px 0 0 0' }}>
@@ -95,9 +116,8 @@ export default function DashboardPage() {
         </div>
 
         {/* Form Box (Glassmorphism Style) */}
-        <form onSubmit={handleSubmit} style={{ 
+        <form onSubmit={handleSubmit} className="dash-form" style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr)) 150px', 
           gap: '15px', 
           marginBottom: '35px', 
           background: 'rgba(20, 20, 20, 0.75)', 
@@ -169,10 +189,10 @@ export default function DashboardPage() {
           background: '#121212', 
           borderRadius: '16px', 
           border: '1px solid #222', 
-          overflow: 'hidden',
+          overflowX: 'auto',
           boxShadow: '0 4px 20px rgba(0,0,0,0.5)'
         }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'right' }}>
+          <table className="dash-table" style={{ width: '100%', minWidth: '560px', borderCollapse: 'collapse', textAlign: 'right' }}>
             <thead>
               <tr style={{ background: '#181818', color: '#f7a01c', fontSize: '14px', borderBottom: '1px solid #262626' }}>
                 <th style={thStyle}># ID</th>
