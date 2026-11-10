@@ -1,0 +1,12 @@
+# DEQS architecture decisions
+
+| ID | Status | Decision and consequence |
+| --- | --- | --- |
+| ADR-001 | Adopted | Save an opening as an editable, versioned draft. Approve explicitly in a separate transaction. Approval must use the reviewed draft revision and atomically write the ledger entry, source claim and receipt. This supersedes the Phase 3.0 direct-opening Save design. |
+| ADR-002 | Adopted | Represent each ledger delta with signed integer fils and return amounts as strings at the API boundary. PostgreSQL sums use exact numeric arithmetic. Maintain positive debt and negative customer credit. The owner still sets the business per-entry cap and accepted input conventions. |
+| ADR-003 | Adopted | Keep one command journal across financial operations. Store a SHA-256 fingerprint of versioned intent alongside canonical JSONB and compare the full canonical payload for replay. Defer group checks to commit. Product replay, serialization and failure recovery remain Milestone D gates. |
+| ADR-004 | Adopted | Start with no provisioned owner and no runtime write surface. Keep data and helper schemas private. The AAL2 read helper runs with a limited non-login role under forced RLS. Expose only reviewed wrappers through the Data API after platform verification. |
+| ADR-005 | Adopted | Keep archived history and balances intact. Default to read-only for archived accounts and require restoration before new postings. A correction exception requires a separately approved policy, explicit authorization and dedicated tests. |
+| ADR-006 | Adopted | Store effective and recorded instants, derive calendar periods using `Asia/Amman`, and reproduce reports against a committed watermark. Keep private financial drafts and pending writes server-side and keep writes online-only. |
+| ADR-007 | Adopted | Preserve the stable owner principal separately from the Supabase Auth binding. Restore into isolation, reconcile, rebind the owner under supervision, rotate the write epoch, then reopen access and writes deliberately. No unattended replay follows a restore. |
+| ADR-008 | Pending owner review | Choose staging and production environments, owner recovery/custody, retention, recovery objectives and budget. Also confirm the paper-ledger cutover, exceptions, opening totals, amount cap and overpayment confirmation. The relevant milestones stay gated until the required decisions are recorded. |
